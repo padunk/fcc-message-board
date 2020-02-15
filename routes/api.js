@@ -1,21 +1,20 @@
 'use strict';
-const threadHandler = require('../controllers/ThreadHandler');
-const replyHandler = require('../controllers/ReplyHandler');
+const ThreadHandler = require('../controllers/ThreadHandler');
+const ReplyHandler = require('../controllers/ReplyHandler');
 
 module.exports = function(app) {
+    const threadHandler = new ThreadHandler();
+    const replyHandler = new ReplyHandler();
+
     app.route('/api/threads/:board')
-        .post((req, res) => threadHandler(req.body.board).postThread(req, res))
-        .get((req, res) => threadHandler(req.body.board).getAllThread(req, res))
-        .delete((req, res) =>
-            threadHandler(req.body.board).deleteThread(req, res)
-        )
-        .put((req, res) => threadHandler(req.body.board).reportThread(req, res));
+        .post(threadHandler.postThread)
+        .get(threadHandler.getAllThread)
+        .delete(threadHandler.deleteThread)
+        .put(threadHandler.postThread);
 
     app.route('/api/replies/:board')
-        .post((req, res) => replyHandler(req.body.board).postReply(req, res))
-        .get((req, res) => replyHandler(req.body.board).getAllReply(req, res))
-        .delete((req, res) =>
-            replyHandler(req.body.board).deleteReply(req, res)
-        )
-        .put((req, res) => replyHandler(req.body.board).reportReply(req, res));
+        .post(replyHandler.postReply)
+        .get(replyHandler.getAllReply)
+        .delete(replyHandler.deleteReply)
+        .put(replyHandler.reportReply);
 };
