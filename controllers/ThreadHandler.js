@@ -11,11 +11,11 @@ mongoose.connect(CONNECTION_STRING, {
     useUnifiedTopology: true,
 });
 
-function threadHandler(board) {
-    const ThreadModel = mongoose.model(board, threadSchema);
-
-    this.postThread((req, res) => {
+class ThreadHandler {
+    
+    postThread(req, res) {
         let { board, text, delete_password } = req.body;
+        let ThreadModel = mongoose.model(board, threadSchema);
 
         let thread = new ThreadModel({
             text,
@@ -26,9 +26,10 @@ function threadHandler(board) {
             if (err) handleError(err);
             res.redirect(`/b/${board}/`);
         });
-    });
+    };
 
-    this.getAllThread((req, res) => {
+    getAllThread(req, res) {
+        let ThreadModel = mongoose.model(req.params.board, threadSchema);
         let options = {
             sort: { bumped_on: -1 },
             limit: 10,
@@ -58,10 +59,11 @@ function threadHandler(board) {
                 );
                 res.json(displayData);
             });
-    });
+    };
 
-    this.deleteThread((req, res) => {
-        let { thread_id, delete_password } = req.body;
+    deleteThread(req, res) {
+        let { board, thread_id, delete_password } = req.body;
+        let ThreadModel = mongoose.model(board, threadSchema);
 
         ThreadModel.findById(thread_id).exec((err, data) => {
             if (err) {
@@ -82,10 +84,12 @@ function threadHandler(board) {
                 alert('incorrect password');
             }
         });
-    });
+    };
 
-    this.reportThread((req, res) => {
-        let { thread_id } = req.body;
+    reportThread(req, res) {
+        let { board, thread_id } = req.body;
+        let ThreadModel = mongoose.model(board, threadSchema);
+
         ThreadModel.findByIdAndUpdate(thread_id, {
             reported: true,
         }).exec((err, data) => {
@@ -96,7 +100,7 @@ function threadHandler(board) {
             alert('success');
             res.send('reported');
         });
-    });
+    };
 }
 
-module.exports = threadHandler;
+module.exports = ThreadHandler;

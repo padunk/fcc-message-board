@@ -2,7 +2,7 @@
 const mongoose = require('mongoose');
 const alert = require('alert-node');
 
-const { repliesSchema } = require('../schema/Schema');
+const { threadSchema, repliesSchema } = require('../schema/Schema');
 const handleError = require('../utils/handleError');
 const CONNECTION_STRING = process.env.DB;
 
@@ -11,15 +11,18 @@ mongoose.connect(CONNECTION_STRING, {
     useUnifiedTopology: true,
 });
 
-function replyHandler(board) {
-    const ReplyModel = mongoose.model(board, repliesSchema);
+class ReplyHandler {
+    
+    postReply(req, res) {
+        let { board, thread_id, text, delete_password } = req.body;
+        let ThreadModel = mongoose.model(board, threadSchema);
+        let ReplyModel = mongoose.model(board, repliesSchema);
 
-    this.postReply((req, res) => {
-        const { thread_id, text, delete_password } = req.body;
         let reply = new ReplyModel({
             text,
             delete_password,
         });
+
         ThreadModel.findByIdAndUpdate(
             thread_id,
             {
@@ -34,10 +37,12 @@ function replyHandler(board) {
                 res.redirect(`/b/${board}/${thread_id}`);
             }
         );
-    });
+    };
 
-    this.getAllReply((req, res) => {
+    getAllReply(req, res) {
         let { thread_id } = req.query;
+        let ThreadModel = mongoose.model(req.params.board, threadSchema);
+
         ThreadModel.findById(thread_id, 'replies').exec((err, { replies }) => {
             if (err) {
                 handleError(err);
@@ -52,10 +57,11 @@ function replyHandler(board) {
             });
             res.json(showReplies);
         });
-    });
+    };
 
-    this.deleteReply((req, res) => {
-        let { reply_id, delete_password: given_password } = req.body;
+    deleteReply(req, res) {
+        let { board, reply_id, delete_password: given_password } = req.body;
+        let ThreadModel = mongoose.model(board, threadSchema);
 
         let findReply = {
             replies: { $elemMatch: { _id: reply_id } },
@@ -94,10 +100,12 @@ function replyHandler(board) {
                     alert('incorrect password');
                 }
             });
-    });
+    };
 
-    this.reportReply((req, res) => {
-        let { reply_id } = req.body;
+    reportReply(req, res) {
+        let { board, reply_id } = req.body;
+        let ThreadModel = mongoose.model(board, threadSchema);
+
         let findReply = {
             replies: {
                 $elemMatch: { _id: reply_id },
@@ -124,7 +132,7 @@ function replyHandler(board) {
                 res.send('reported');
             }
         );
-    });
+    };
 }
 
-module.exports = replyHandler;
+module.exports = ReplyHandler;
